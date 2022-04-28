@@ -1,0 +1,240 @@
+﻿@namespace ProjectTemplate.WebAssembly
+@using Cwj.Abp.AntDesignTheme.NavigationTabs
+@using Cwj.Abp.AntDesignTheme.PageToolbars
+@using Microsoft.Extensions.Options
+@using ProjectTemplate.WebAssembly.Layouts
+@using Volo.Abp.UI.Navigation
+@inherits ProjectTemplateLayout
+
+<AntDesign.ProLayout.BasicLayout Logo="@("https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg")"
+                                 MenuData="_menuData.ToArray()" >
+    <RightContentRender>
+        <ProjectTemplate.WebAssembly.Components.RightContent />
+    </RightContentRender>
+    <ChildContent>
+        <Tabs Type="@TabType.EditableCard" HideAdd @bind-ActiveKey="activeKey" OnClose="CloseTab" OnChange="ChangeTab" OnTabClick="TabClick">
+            @foreach (var pane in Items)
+            {
+                <TabPane Key="@pane.Url" Tab="@pane.Title" Closable=@pane.CanClose>
+
+                </TabPane>
+            }
+        </Tabs>
+
+
+        @Body
+    </ChildContent>
+    <FooterRender>
+        <FooterView Copyright="2021 Ant Design Blazor" Links="Links"></FooterView>
+    </FooterRender>
+</AntDesign.ProLayout.BasicLayout>
+<SettingDrawer />
+@code
+{
+    private List<MenuDataItem> _menuData = new List<MenuDataItem>();
+
+    private string activeKey;
+
+    private List<NavigationTabItem> Items { get; set; } = new List<NavigationTabItem>();
+    [Inject] protected IJSRuntime JsRuntime { get; set; }
+    [Inject] public HttpClient HttpClient { get; set; }
+    [Inject] protected IMenuManager MenuManager { get; set; }
+    [Inject] protected INavigationTabManager NavigationTabManager { get; set; }
+    [Inject] NavigationManager NavigationManager { get; set; }
+    [Inject] protected IOptions<ProSettings> ProSetting{ get; set; }
+    private List<INavigationTab> tabs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        if(!Utils.ThemeColors.ContainsKey("#eb2f96"))
+        {
+            Utils.ThemeColors.Add("#eb2f96", "pink");
+        }
+        ProSetting.Value.OnStateChange += StateChange;
+        tabs = NavigationTabManager.GetItems();
+        var menu = await MenuManager.GetMainMenuAsync();
+        CreateMenu(menu);
+        var items = new List<NavigationTabItem>();
+        await JsRuntime.InvokeVoidAsync("initAntDesignTheme",ProSetting.Value.NavTheme);
+        await JsRuntime.InvokeVoidAsync("initAntDesignColor",ProSetting.Value.PrimaryColor);
+        var value = await JsRuntime.InvokeAsync<string>(
+        "sessionStorage.getItem",
+        "NavigationItems"
+        );
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            items = System.Text.Json.JsonSerializer.Deserialize<List<NavigationTabItem>>(value);
+        }
+
+        if (items != null)
+        {
+            Items = items;
+        }
+        var first = tabs.FirstOrDefault(t => t.IsFirst == true);
+        if (!items.Exists(t => t.Url == first.DefaultUrl))
+        {
+            Items.Insert(0, new NavigationTabItem { CanClose = first.CanClose, Icon = first.Icon, Title = first.Title, Url = first.DefaultUrl });
+        }
+
+        var currentUrl = NavigationManager.Uri;
+        var baseUrl = NavigationManager.BaseUri;
+        var url = currentUrl.Replace(baseUrl, "/");
+        var flag = Items.Exists(t => t.Url == url);
+        if (!flag)
+        {
+            var currentTab = tabs.FirstOrDefault(t => t.IsCurrentRouter(url));
+            Items.Add(new NavigationTabItem { CanClose = currentTab.CanClose, Icon = currentTab.Icon, Title = currentTab.Title, Url = url });
+
+            var itemsJson = System.Text.Json.JsonSerializer.Serialize(Items);
+            await JsRuntime.InvokeVoidAsync("sessionStorage.setItem","NavigationItems",itemsJson);
+        }
+        activeKey = url;
+    }
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    private async void StateChange()
+    {
+        await JsRuntime.InvokeVoidAsync("initAntDesignTheme",ProSetting.Value.NavTheme);
+        await JsRuntime.InvokeVoidAsync("initAntDesignColor",ProSetting.Value.PrimaryColor);
+    }
+
+    private async void CloseTab(string targetKey)
+    {
+        var item = Items.FirstOrDefault(t => t.Url == targetKey);
+        var index = Items.IndexOf(item);
+        Items.Remove(item);
+        if (activeKey == targetKey)
+        {
+            activeKey = Items[index - 1].Url;
+        }
+        NavigationManager.NavigateTo(activeKey);
+        var itemsJson = System.Text.Json.JsonSerializer.Serialize(Items);
+        await JsRuntime.InvokeVoidAsync("sessionStorage.setItem", "NavigationItems", itemsJson);
+    }
+
+    private void ChangeTab(string activeKey)
+    {
+        //NavigationManager.NavigateTo(activeKey);
+    }
+
+    private void TabClick(string key)
+    {
+        var currentUrl = NavigationManager.Uri;
+        var baseUrl = NavigationManager.BaseUri;
+        var url = currentUrl.Replace(baseUrl, "/");
+        if(url!=key)
+        {
+            NavigationManager.NavigateTo(key);
+        }
+
+    }
+
+    protected async override Task OnParametersSetAsync()
+    {
+        var currentUrl = NavigationManager.Uri;
+        var baseUrl = NavigationManager.BaseUri;
+        var url = currentUrl.Replace(baseUrl, "/");
+        var flag = Items.Exists(t => t.Url == url);
+        if (!flag)
+        {
+            var currentTab = tabs.FirstOrDefault(t => t.IsCurrentRouter(url));
+            Items.Add(new NavigationTabItem { CanClose = currentTab.CanClose, Icon = currentTab.Icon, Title = currentTab.Title, Url = url });
+            
+            var itemsJson = System.Text.Json.JsonSerializer.Serialize(Items);
+            await JsRuntime.InvokeVoidAsync("sessionStorage.setItem","NavigationItems",itemsJson);
+        }
+        activeKey = url;
+        await base.OnParametersSetAsync();
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+        }
+
+
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    public override Task SetParametersAsync(ParameterView parameters)
+    {
+        return base.SetParametersAsync(parameters);
+    }
+
+    protected void CreateMenu(ApplicationMenu Menu)
+    {
+        _menuData = new List<MenuDataItem>();
+
+        foreach (var item in Menu.Items)
+        {
+            var url = item.Url == null ? "#" : item.Url.TrimStart('/', '~');
+            var menu = new MenuDataItem()
+                {
+                    Path = url,
+                    Name = item.DisplayName,
+                    Key = item.Name,
+                    Icon = item.Icon
+                };
+
+            if (item.Items.Count > 0)
+                menu.Children = CreateChildMenu(item).ToArray();
+
+            _menuData.Add(menu);
+        }
+    }
+
+    protected List<MenuDataItem> CreateChildMenu(ApplicationMenuItem Menu)
+    {
+        List<MenuDataItem> menu = new List<MenuDataItem>();
+        foreach (var item in Menu.Items)
+        {
+            var url = item.Url == null ? "#" : item.Url.TrimStart('/', '~');
+            var child = new MenuDataItem()
+                {
+                    Path = url,
+                    Name = item.DisplayName,
+                    Key = item.Name,
+                    Icon = item.Icon
+                };
+
+            if (item.Items.Count > 0)
+                child.Children = CreateChildMenu(item).ToArray();
+
+            menu.Add(child);
+        }
+        return menu;
+    }
+
+    public LinkItem[] Links { get; set; } =
+        {
+        new LinkItem
+        {
+            Key = "Ant Design Blazor",
+            Title = "Ant Design Blazor",
+            Href = "https://antblazor.com",
+            BlankTarget = true,
+        },
+        new LinkItem
+        {
+            Key = "github",
+            Title = (RenderFragment)(
+    @<Icon Type="github" />),
+            Href = "https://github.com/ant-design-blazor/ant-design-pro-blazor",
+            BlankTarget = true,
+        },
+        new LinkItem
+        {
+            Key = "Blazor",
+            Title = "Blazor",
+            Href = "https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor?WT.mc_id=DT-MVP-5003987",
+            BlankTarget = true,
+        }
+    };
+}

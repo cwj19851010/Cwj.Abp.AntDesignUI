@@ -1,0 +1,71 @@
+﻿@namespace ProjectTemplate.WebAssembly.Components
+@using Microsoft.AspNetCore.Components.Authorization
+@inherits AntDomComponentBase
+
+
+
+<Space Class="@ClassMapper.Class" Size="@("24")">
+    <SpaceItem>
+        <AuthorizeView>
+        <NotAuthorized>
+            <a href="authentication/register">Register</a>
+            <a href="authentication/login">Log in</a>
+        </NotAuthorized>
+</AuthorizeView>
+    </SpaceItem>
+    <SpaceItem>
+        <HeaderSearch Class="action search"
+                      Placeholder="Site Search"
+                      DefaultValue="umi ui"
+                      Options="DefaultOptions" />
+    </SpaceItem>
+    <SpaceItem>
+        <AntDesign.Tooltip Title="@("Help")" Placement="@Placement.Bottom">
+            <Unbound>
+                <span @ref="@context.Current" class="action">
+                    <Icon Type="question-circle" Theme="outline" />
+                </span>
+            </Unbound>
+        </AntDesign.Tooltip>
+    </SpaceItem>
+    <SpaceItem>
+        <NoticeIcon ClearText="Empty"
+                    ViewMoreText="see more"
+                    Count="_count"
+                    OnClear="HandleClear"
+                    OnViewMore="HandleViewMore">
+            <NoticeList TabKey="notification"
+                        Title="Notifications"
+                        EmptyText="You have viewed all notifications"
+                        ShowViewMore
+                        Data="_notifications" />
+            <NoticeList TabKey="message"
+                        Title="Messages"
+                        EmptyText="You have read all messages"
+                        ShowViewMore
+                        Data="_messages" />
+            <NoticeList TabKey="event"
+                        Title="Upcoming"
+                        EmptyText="You have completed all to do"
+                        ShowViewMore
+                        Data="_events" /> 
+        </NoticeIcon>
+    </SpaceItem>
+    <SpaceItem>
+        <AuthorizeView>
+            <Authorized>
+                @*<a href="authentication/profile">Hello, @context.User.Identity!.Name!</a>*@
+                <AvatarDropdown 
+                        Avatar="/assets/logo.svg"
+                        Name ="@context.User.Identity.Name"
+                        MenuItems="@AvatarMenuItems"
+                        OnItemSelected="HandleSelectUser" />
+
+                @*<button class="nav-link btn btn-link" @onclick="BeginSignOut">Log out</button>*@
+            </Authorized>
+        </AuthorizeView>
+    </SpaceItem>
+    <SpaceItem>
+        <Cwj.Abp.AntDesignUI.Components.LanguageSwitch></Cwj.Abp.AntDesignUI.Components.LanguageSwitch>
+    </SpaceItem>
+</Space>

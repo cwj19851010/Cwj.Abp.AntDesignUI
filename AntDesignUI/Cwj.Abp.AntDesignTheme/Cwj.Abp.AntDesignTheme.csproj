@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+    <Import Project="..\common.props" />
+    <Import Project="..\configureawait.props" />
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Volo.Abp.AspNetCore.Components.WebAssembly" Version="5.2.1" />
+      <PackageReference Include="Volo.Abp.Http.Client.IdentityModel.WebAssembly" Version="5.2.1" />
+      <PackageReference Include="Volo.Abp.UI.Navigation" Version="5.2.1" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <PackageReference Update="Fody" Version="6.6.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+      </PackageReference>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Themes\AntDesignTheme\" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\Cwj.Abp.AntDesignUI\Cwj.Abp.AntDesignUI.csproj" />
+    </ItemGroup>
+    
+
+</Project>

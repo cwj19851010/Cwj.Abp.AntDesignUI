@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net6</TargetFramework>
+    <RazorLangVersion>3.0</RazorLangVersion>
+	  <BlazorCacheBootResources>false</BlazorCacheBootResources>
+  <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\web\" />
+  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="AntDesign.Charts" Version="0.2.2" />
+		<PackageReference Include="AntDesign.ProLayout" Version="0.1.10" />
+		<PackageReference Include="IdentityModel" Version="6.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.4" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="6.0.4" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.4" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0" />
+		<PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
+		<PackageReference Include="Volo.Abp.Account.Application.Contracts" Version="5.2.1" />
+		<PackageReference Include="Volo.Abp.Autofac.WebAssembly" Version="5.2.1" />
+		<PackageReference Include="Volo.Abp.AutoMapper" Version="5.2.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\ProjectTemplate\src\ProjectTemplate.Domain.Shared\ProjectTemplate.Domain.Shared.csproj" />
+	  <ProjectReference Include="..\Cwj.Abp.IdentityManagement.AntDesignUI\Cwj.Abp.IdentityManagement.AntDesignUI.csproj" />
+	  <ProjectReference Include="..\Cwj.Abp.SettingManagement.AntDesignUI\Cwj.Abp.SettingManagement.AntDesignUI.csproj" />
+	  <ProjectReference Include="..\Cwj.Abp.TenantManagement.AntDesignUI\Cwj.Abp.TenantManagement.AntDesignUI.csproj" />
+	</ItemGroup>
+	
+  <PropertyGroup Condition=" '$(SolutionDir)'==''">
+    <SolutionDir>./</SolutionDir>
+  </PropertyGroup>
+
+  <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SolutionDir)node_modules') ">
+    <!-- Ensure Node.js is installed -->
+    <Exec Command="node --version" ContinueOnError="true">
+      <Output TaskParameter="ExitCode" PropertyName="ErrorCode" />
+    </Exec>
+    <Error Condition="'$(ErrorCode)' != '0'" Text="Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE." />
+    <Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
+    <Exec WorkingDirectory="$(SolutionDir)" Command="npm install" />
+  </Target>
+
+  <Target Name="DebugRunGulp" BeforeTargets="DebugEnsureNodeEnv" Condition=" '$(Configuration)' == 'Debug' And Exists('$(SolutionDir)node_modules') ">
+    <Exec WorkingDirectory="$(SolutionDir)" Command="npm run gulp:pro" />
+  </Target>
+
+  <Target Name="PublishRunGulp" AfterTargets="ComputeFilesToPublish">
+    <Exec WorkingDirectory="$(SolutionDir)" Command="npm install" />
+    <Exec WorkingDirectory="$(SolutionDir)" Command="npm run gulp:pro" />
+  </Target>
+</Project>
